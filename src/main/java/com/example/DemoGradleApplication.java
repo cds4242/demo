@@ -9,7 +9,7 @@ public class DemoGradleApplication {
     public static void main(String[] args) {
 
 
-
+    	System.out.println();
         SpringApplication.run(DemoGradleApplication.class, args); //ddabc
 
     }
