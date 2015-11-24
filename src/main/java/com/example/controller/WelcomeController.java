@@ -21,12 +21,6 @@ import com.example.vo.TestVo;
 @RestController
 public class WelcomeController {
 
-	/**
-	 * Welcome.
-	 *
-	 * @return the string
-	 */
-
 	@RequestMapping("/welcome")
 	public TestVo welcome() {
 		TestVo testVo = new TestVo();
