@@ -1,12 +1,11 @@
 buildscript {
     ext {
         springBootVersion = '1.3.0.RELEASE'
-        profile='biz01'
     }
     repositories {
-    	flatDir { dirs "webapp/WEB-INF/lib" }
+    	flatDir { dirs "lib" }
         maven {
-        url "http://192.168.10.15:8081/nexus/content/groups/public"
+       	 url "http://192.168.10.15:8081/nexus/content/groups/public"
     	}
     }
     dependencies {
@@ -26,8 +25,11 @@ apply plugin: 'maven'
 ext {
         projectName = 'demoGradle'
         projectVersion = '0.0.1'
+        commonsioVersion = '2.3'
     }
 
+//리소스를 어떤 폴더로 대체할 것인가?
+//Biz#1, Biz#2별로 리소스를 분리하기 위해서 sourceSets사용
 sourceSets {
     def targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
     println "targetServer: $targetServer"
@@ -46,6 +48,13 @@ sourceSets {
     }
 }
 
+//이걸 설정안하면 다음과 같은 에러 발생
+//Unable to find a single main class from the following candidates [com.example.DemoGradleApplication, com.example.controller.TestController]
+//Could not execute build using Gradle distribution 'https://services.gradle.org/distributions/gradle-2.7-bin.zip'.
+springBoot {
+    mainClass = "com.example.DemoGradleApplication"
+}
+
 jar {
     baseName = projectName
     version = '0.0.1-SNAPSHOT'
@@ -60,7 +69,8 @@ sourceCompatibility = 1.7
 targetCompatibility = 1.7
 
 repositories {
-	flatDir { dirs "webapp/WEB-INF/lib" }
+	//소스내에 lib를 참조하기 위해
+	flatDir { dirs "lib" }
     maven {
         url "http://192.168.10.15:8081/nexus/content/groups/public"
     	}
@@ -68,10 +78,12 @@ repositories {
 
 ext['tomcat.version'] = '7.0.59'
 dependencies {
-	compile fileTree(dir: 'src/main/webapp/WEB-INF/lib', include: ['*.jar'])
+
+	//runtime fileTree(dir: 'src/main/webapp/WEB-INF/lib', include: ['*.jar'])
+	compile fileTree(dir: 'src/main/lib', include: ['*.jar'])
     compile('org.springframework.boot:spring-boot-starter-web')
-    compile('commons-io:commons-io:2.3')
-    compile('com.konai.kccs:snmp4j:2.3.0')
+    compile('commons-io:commons-io:' + commonsioVersion)
+
     testCompile('org.springframework.boot:spring-boot-starter-test')
 }
 
@@ -88,6 +100,7 @@ task wrapper(type: Wrapper) {
 }
 
 //ssh remote Server 관리
+//depoly에서 참고할거임
 remotes {
     biz01 {
         host = '192.168.30.11'
@@ -125,6 +138,7 @@ task deploy << {
 }
 
 //pom.xml만들기
+//install로도 만들수 있음
 task createPom << {
     pom {
         project {
