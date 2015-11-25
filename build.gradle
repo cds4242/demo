@@ -21,6 +21,12 @@ apply plugin: 'idea'
 apply plugin: 'war'
 apply plugin: 'spring-boot'
 apply plugin: 'ssh'
+apply plugin: 'maven'
+
+ext {
+        projectName = 'demoGradle'
+        projectVersion = '0.0.1'
+    }
 
 sourceSets {
     def targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
@@ -41,51 +47,13 @@ sourceSets {
 }
 
 jar {
-    baseName = 'demo'
+    baseName = projectName
     version = '0.0.1-SNAPSHOT'
 }
 
-
 war {
-    archiveName = 'rest2.war'
+    archiveName = projectName + '-' + projectVersion + '.war'
 }
-
-
-remotes {
-    biz01 {
-        host = '192.168.30.11'
-        user = 'ksecret'
-        password = 'ksecret'
-    }
-    biz02 {
-        host = '192.168.30.12'
-        user = 'ksecret'
-        password = 'ksecret'
-    }
-}
-
-task deploy << {
-
-	def targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
-    println "Deploy targetServer: $targetServer"
-	if( "$targetServer" == "biz01" ){
-	    ssh.run {
-	   	  session(remotes.biz01) {
-		      execute 'mkdir /home/ksecret/test'
-		      put from: (war.archivePath.absolutePath) , into: '/home/ksecret/test'
-	    	}
-	    }
-    }
-	if( "$targetServer" == "biz02" ){
-	    ssh.run {
-	   	  session(remotes.biz02) {
-		      execute 'mkdir /home/ksecret/test'
-		      put from: (war.archivePath.absolutePath) , into: '/home/ksecret/test'
-	    	}
-	    }
- 	 }
-}
-
 
 
 sourceCompatibility = 1.7
@@ -119,3 +87,59 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.7'
 }
 
+//ssh remote Server 관리
+remotes {
+    biz01 {
+        host = '192.168.30.11'
+        user = 'ksecret'
+        password = 'ksecret'
+    }
+    biz02 {
+        host = '192.168.30.12'
+        user = 'ksecret'
+        password = 'ksecret'
+    }
+}
+
+//maven의 wagon과 같은 ssh를 통해 쉘스크립트 및 war파일 복사
+task deploy << {
+
+	def targetServer = project.hasProperty('target') ? project.getProperty('target') : 'local'
+    println "Deploy targetServer: $targetServer"
+	if( "$targetServer" == "biz01" ){
+	    ssh.run {
+	   	  session(remotes.biz01) {
+		      execute 'mkdir /home/ksecret/test'
+		      put from: (war.archivePath.absolutePath) , into: '/home/ksecret/test'
+	    	}
+	    }
+    }
+	if( "$targetServer" == "biz02" ){
+	    ssh.run {
+	   	  session(remotes.biz02) {
+		      execute 'mkdir /home/ksecret/test'
+		      put from: (war.archivePath.absolutePath) , into: '/home/ksecret/test'
+	    	}
+	    }
+ 	 }
+}
+
+//pom.xml만들기
+task createPom << {
+    pom {
+        project {
+            groupId 'org.example'
+            artifactId 'test'
+            version '1.0.0'
+
+            inceptionYear '2008'
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+        }
+    }.writeTo("pom.xml")
+}
